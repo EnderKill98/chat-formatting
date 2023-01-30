@@ -35,7 +35,7 @@ impl Translator {
                     "" // Should always be %s
                 } else {
                     let index = if let Ok(custom_arg_index) = group_1.parse::<usize>() {
-                        custom_arg_index
+                        custom_arg_index - 1
                     } else {
                         let index = i;
                         i += 1;
