@@ -18,9 +18,13 @@ impl Translator {
         Ok(Self { translations })
     }
 
-    pub fn translate(&self, translate: &str, args: &[&str]) -> String {
+    pub fn translate(&self, translate: &str, args: &[&str], fallback: Option<&str>) -> String {
         let translate = translate.to_owned();
-        let translate = self.translations.get(&translate).unwrap_or(&translate);
+        let translate = self
+            .translations
+            .get(&translate)
+            .map(|s| s.as_str())
+            .unwrap_or(&fallback.unwrap_or_else(|| translate.as_str()));
 
         let mut i = 0;
         ARG_REGEX

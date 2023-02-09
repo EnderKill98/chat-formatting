@@ -101,7 +101,11 @@ impl TextFormatter for ChatComponent {
             TextContent::EntityNamesSelector { selector, .. } => {
                 format!("<selector:{:?}>", selector)
             }
-            TextContent::Translatable { translate, with } => {
+            TextContent::Translatable {
+                translate,
+                with,
+                fallback,
+            } => {
                 let resolved_args = with
                     .as_ref()
                     .unwrap_or(&Vec::new())
@@ -121,6 +125,7 @@ impl TextFormatter for ChatComponent {
                         .iter()
                         .map(|arg| arg.as_str())
                         .collect::<Vec<_>>(),
+                    fallback.as_ref().map(|s| s.as_str()),
                 )
             }
         });
@@ -139,6 +144,7 @@ pub enum TextContent {
     Translatable {
         translate: String,
         with: Option<Vec<Chat>>,
+        fallback: Option<String>,
     },
     Keybind {
         keybind: String,
@@ -195,6 +201,7 @@ impl TextContent {
             TextContent::Translatable {
                 translate: translate.to_owned(),
                 with: None,
+                fallback: None,
             }
         } else {
             TextContent::Translatable {
@@ -202,6 +209,7 @@ impl TextContent {
                 with: Some(Vec::from_iter(
                     with.iter().map(|arg| Chat::Legacy(arg.to_string())),
                 )),
+                fallback: None,
             }
         }
     }
