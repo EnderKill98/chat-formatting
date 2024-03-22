@@ -1,6 +1,11 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
-use crate::{formatting::ChatColor, translator::Translator};
+use crate::{
+    formatting::{ChatColor, ChatFormat},
+    translator::Translator,
+};
 
 pub trait TextFormatter {
     /// Convert self into a legacy formatted string (using formatting codes prefixed by a paragraph "§")
@@ -262,7 +267,6 @@ impl TextFormatter for Chat {
             Chat::Legacy(text) => text.to_owned(),
             Chat::Component(component) => component.to_legacy_string(translator),
             Chat::Components(components) => {
-                eprintln!("Got comps");
                 let mut builder = String::new();
                 for component in components {
                     builder.push_str(&component.to_legacy_string(translator));
@@ -270,6 +274,83 @@ impl TextFormatter for Chat {
                 builder
             }
         }
+    }
+}
+
+impl Chat {
+    pub fn new(legacy_text: &str) -> Self {
+        Self::from_legacy(legacy_text)
+    }
+
+    pub fn from_legacy(legacy_text: &str) -> Self {
+        let mut components: Vec<ChatComponent> = vec![];
+
+        let mut cur_text = String::new();
+        let mut cur_color: Option<ChatColor> = None;
+        let mut cur_formattings: HashSet<ChatFormat> = HashSet::default();
+
+        fn to_component(
+            text: &str,
+            color: &Option<ChatColor>,
+            formattings: &HashSet<ChatFormat>,
+        ) -> ChatComponent {
+            ChatComponent {
+                content: TextContent::Literal {
+                    text: text.to_owned(),
+                },
+                color: color.clone(),
+                bold: formattings.contains(&ChatFormat::Bold),
+                italic: formattings.contains(&ChatFormat::Italic),
+                obfuscated: formattings.contains(&ChatFormat::Obfuscated),
+                strikethrough: formattings.contains(&ChatFormat::Strikethrough),
+                underlined: formattings.contains(&ChatFormat::Underlined),
+                ..Default::default()
+            }
+        }
+
+        let mut previous_was_paragraph = false;
+        for char in legacy_text.chars() {
+            if char == '§' {
+                previous_was_paragraph = true;
+                continue;
+            }
+            if previous_was_paragraph {
+                previous_was_paragraph = false;
+
+                if let Ok(format) = ChatFormat::from_format_code_char(char) {
+                    if !cur_text.is_empty() {
+                        components.push(to_component(&cur_text, &cur_color, &cur_formattings));
+                        cur_text.clear();
+                    }
+                    cur_formattings.insert(format);
+                }
+                if let Ok(color) = ChatColor::from_color_code_char(char) {
+                    if !cur_text.is_empty() {
+                        components.push(to_component(&cur_text, &cur_color, &cur_formattings));
+                        cur_text.clear();
+                    }
+                    cur_color = Some(color);
+                    cur_formattings.clear();
+                }
+            }
+
+            cur_text.push(char);
+        }
+
+        if !cur_text.is_empty() {
+            components.push(to_component(&cur_text, &cur_color, &cur_formattings));
+        }
+
+        let mut root_component = Default::default();
+        for (i, component) in components.into_iter().enumerate() {
+            if i == 0 {
+                root_component = component;
+            } else {
+                root_component.extra.push(component);
+            }
+        }
+
+        return Chat::Component(root_component);
     }
 }
 
