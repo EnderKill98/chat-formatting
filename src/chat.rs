@@ -61,11 +61,15 @@ pub struct ChatComponent {
     pub color: Option<ChatColor>,
 
     /// Inserts in chat promt, if shift clicked
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub insertion: Option<String>,
     /// Not used here, but might be useful to have (custom font path)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub font: Option<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub click_event: Option<ClickEvent>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hover_event: Option<HoverEvent>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
