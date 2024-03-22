@@ -332,6 +332,7 @@ impl Chat {
                     cur_color = Some(color);
                     cur_formattings.clear();
                 }
+                continue;
             }
 
             cur_text.push(char);
