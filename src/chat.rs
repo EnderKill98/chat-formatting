@@ -58,6 +58,7 @@ pub struct ChatComponent {
     #[serde(default, skip_serializing_if = "is_false")]
     pub obfuscated: bool,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<ChatColor>,
 
     /// Inserts in chat promt, if shift clicked
