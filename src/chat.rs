@@ -149,10 +149,28 @@ impl TextFormatter for ChatComponent {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
+pub enum TranslatablePlaceholder {
+    Chat(Chat),
+    Number(i64),
+    // TODO: Is a decimal needed?
+    //Decimal(f64),
+}
+
+impl TextFormatter for TranslatablePlaceholder {
+    fn to_legacy_string(&self, translator: &Translator) -> String {
+        match self {
+            Self::Chat(chat) => chat.to_legacy_string(translator),
+            Self::Number(number) => number.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum TextContent {
     Translatable {
         translate: String,
-        with: Option<Vec<Chat>>,
+        with: Option<Vec<TranslatablePlaceholder>>,
         fallback: Option<String>,
     },
     Keybind {
@@ -215,9 +233,9 @@ impl TextContent {
         } else {
             TextContent::Translatable {
                 translate: translate.to_owned(),
-                with: Some(Vec::from_iter(
-                    with.iter().map(|arg| Chat::Legacy(arg.to_string())),
-                )),
+                with: Some(Vec::from_iter(with.iter().map(|arg| {
+                    TranslatablePlaceholder::Chat(Chat::Legacy(arg.to_string()))
+                }))),
                 fallback: None,
             }
         }
