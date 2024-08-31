@@ -198,6 +198,9 @@ pub enum TextContent {
         score: Score,
     },
     Literal {
+        // For some stupid reason, paper (since 1.21.1) and some plugins generate a object like this: { "": "\n" } (mainly EssentialsX afk message and /version)
+        // This is completely insane, no idea how they got to make that! Accepting "" as "text" should parse it correctly
+        #[serde(alias = "")]
         text: String,
     },
 }
