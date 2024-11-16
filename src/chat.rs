@@ -74,7 +74,7 @@ pub struct ChatComponent {
     pub hover_event: Option<HoverEvent>,
 
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub extra: Vec<ChatComponent>,
+    pub extra: Vec<Chat>,
 }
 
 impl TextFormatter for ChatComponent {
@@ -373,7 +373,7 @@ impl Chat {
             if i == 0 {
                 root_component = component;
             } else {
-                root_component.extra.push(component);
+                root_component.extra.push(Chat::Component(component));
             }
         }
 
